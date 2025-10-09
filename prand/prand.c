@@ -122,8 +122,12 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 	ssize_t		wlen;
 	bool		result = true;
 
-	struct random_data	rdata;
 	char			rstate[RANDOM_STATE_SIZE];
+#if !defined(__redox__)
+	struct random_data	rdata;
+#else /* !defined(__redox__) */
+	char			*rstate_prev = NULL;
+#endif /* !defined(__redox__) */
 
 	n = cmdl->Length;
 	buf0 = malloc(n);
@@ -134,8 +138,9 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 		return false;
 	}
 
-	memset(&rdata, 0, sizeof(rdata));
 	memset(rstate, 0, sizeof(rstate));
+#if !defined(__redox__)
+	memset(&rdata, 0, sizeof(rdata));
 	if (initstate_r((unsigned int)(cmdl->Seed),
 			rstate, sizeof(rstate), &rdata) != 0) {
 		fprintf(stderr, "%s: ERROR: initstate_r() returns error, %s.\n",
@@ -143,21 +148,28 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 			strerror(errno)
 		);
 		result = false;
-		goto out;
+		goto out_free;
 	}
+#else /* !defined(__redox__) */
+	rstate_prev = initstate((unsigned int)(cmdl->Seed), rstate, sizeof(rstate));
+#endif /* !defined(__redox__) */
 
 	p = buf0;
 	while (n) {
 		int32_t		r32 = 0;
 
+#if !defined(__redox__)
 		if (random_r(&rdata, &r32) != 0) {
 			fprintf(stderr, "%s: ERROR: random_r() returns error, %s.\n",
 				cmdl->Argv0,
 				strerror(errno)
 			);
 			result = false;
-			goto out;
+			goto out_rstate;
 		}
+#else /* !defined(__redox__) */
+		r32 = (int32_t)random();
+#endif /* !defined(__redox__) */
 		*p = (unsigned char)(r32 >> (RANDOM_BITS - 8));
 		p++;
 		n--;
@@ -172,9 +184,15 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 			(long)(wlen), (long)(n)
 		);
 		result = false;
-		goto out;
+		goto out_rstate;
 	}
-out:
+out_rstate:
+#if !defined(__redox__)
+	/* Do nothing. */
+#else /* !defined(__redox__) */
+	setstate(rstate_prev);
+#endif /* !defined(__redox__) */
+out_free:
 	free(buf0);
 	return result;
 }
