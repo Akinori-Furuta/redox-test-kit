@@ -205,6 +205,13 @@ int main(int argc, char **argv, __maybe_unused char **env)
 		fprintf(stderr, HelpMessage, argv[0]);
 		return 1;
 	}
+	if (CommandLine.Debug) {
+		fprintf(stderr, "%s: DEBUG: Debug mode. Seed=%ld, Length=%ld\n",
+			argv[0],
+			(long)(CommandLine.Seed),
+			(long)(CommandLine.Length)
+		);
+	}
 	if (!EmitPesudoRand(&CommandLine)) {
 		result = 2;
 	}
