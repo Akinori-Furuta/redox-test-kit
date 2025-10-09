@@ -26,7 +26,6 @@
 #endif
 
 /* Error output file pointer.
- * @note Redox OS doesn't provide stderr.
  */
 FILE	*fpError = NULL;
 
