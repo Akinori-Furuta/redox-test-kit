@@ -1,6 +1,4 @@
-all: prand/prand
-
-prand/prand:
+all:
 	make -C prand
 
 clean:
