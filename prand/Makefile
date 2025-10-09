@@ -10,3 +10,5 @@ all: prand
 prand: prand.c
 	$(CC) $(CFLAGS) $(CFLAGS_EXTRA) -o $@ $<
 
+clean:
+	rm prand
