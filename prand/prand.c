@@ -25,7 +25,17 @@
 #define	INVALID_FD	(-1)
 #endif
 
-const char HelpMessage[] = "%s: INFO: prand [-s seed_value] bytes_to_output\n";
+/* Error output file pointer.
+ * @note Redox OS doesn't provide stderr.
+ */
+FILE	*fpError = NULL;
+
+const char HelpMessage[] =
+	"%s: INFO: prand [-v] [-s seed_value] bytes_to_output\n"
+	"%s: INFO: -v: Debug\n"
+	"%s: INFO: -s seed_value: Integer pseudo random seed value\n"
+	"%s: INFO: -V debug_switch: e: Output error messages to stdout.\n"
+	;
 
 typedef struct {
 	bool		Debug;
@@ -46,11 +56,12 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 {	int	result = true;
 	int	opt;
 	long	lval;
+	char	c;
 	char	*p;
 	char	*p2;
 
 	cmdl->Argv0 = argv[0];
-	while ((opt = getopt(argc, argv, "s:vh")) != -1) {
+	while ((opt = getopt(argc, argv, "s:vV:h")) != -1) {
 		switch (opt) {
 		case 's':
 			/* Set Random Seed */
@@ -58,13 +69,13 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 			p2 = p;
 			lval = strtol(p, &p2, 0);
 			if (p2 == p) {
-				fprintf(stderr, "%s: ERROR: Specify integer to -s (seed) option.\n",
+				fprintf(fpError, "%s: ERROR: Specify integer to -s (seed) option.\n",
 					cmdl->Argv0
 				);
 				result = false;
 			} else {
 				if (lval == 0) {
-					fprintf(stderr, "%s: NOTICE: Seed value 0 is alias to 1.\n",
+					fprintf(fpError, "%s: NOTICE: Seed value 0 is alias to 1.\n",
 						cmdl->Argv0
 					);
 				}
@@ -75,6 +86,20 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 			/* Set debug */
 			cmdl->Debug = true;
 			break;
+		case 'V':
+			/* Debug switch */
+			p = optarg;
+			while ((c = *p) != 0) {
+				switch (c) {
+				case 'e':
+					fpError = stdout;
+					break;
+				default:
+					break;
+				}
+				p++;
+			}
+			break;
 		case 'h':
 		case '?':
 		default:
@@ -84,7 +109,7 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 		}
 	}
 	if (optind >= argc) {
-		fprintf(stderr, "%s: ERROR: Specify bytes to output at 1st argument.\n",
+		fprintf(fpError, "%s: ERROR: Specify bytes to output at 1st argument.\n",
 			cmdl->Argv0
 		);
 		result = false;
@@ -95,14 +120,14 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 	p2 = p;
 	lval = strtol(p, &p2, 0);
 	if (p2 == p) {
-		fprintf(stderr, "%s: ERROR: Specify positive integer number to bytes to output.\n",
+		fprintf(fpError, "%s: ERROR: Specify positive integer number to bytes to output.\n",
 			cmdl->Argv0
 		);
 		result = false;
 		return result;
 	}
 	if (lval < 0) {
-		fprintf(stderr, "%s: ERROR: Bytes to output can not be negative value.\n",
+		fprintf(fpError, "%s: ERROR: Bytes to output can not be negative value.\n",
 			cmdl->Argv0
 		);
 		result = false;
@@ -132,7 +157,7 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 	n = cmdl->Length;
 	buf0 = malloc(n);
 	if (!buf0) {
-		fprintf(stderr, "%s: ERROR: Can not allocate buffer. n=%ld(0x%lx)\n",
+		fprintf(fpError, "%s: ERROR: Can not allocate buffer. n=%ld(0x%lx)\n",
 			cmdl->Argv0, (long)n, (long)n
 		);
 		return false;
@@ -143,7 +168,7 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 	memset(&rdata, 0, sizeof(rdata));
 	if (initstate_r((unsigned int)(cmdl->Seed),
 			rstate, sizeof(rstate), &rdata) != 0) {
-		fprintf(stderr, "%s: ERROR: initstate_r() returns error, %s.\n",
+		fprintf(fpError, "%s: ERROR: initstate_r() returns error, %s.\n",
 			cmdl->Argv0,
 			strerror(errno)
 		);
@@ -160,7 +185,7 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 
 #if !defined(__redox__)
 		if (random_r(&rdata, &r32) != 0) {
-			fprintf(stderr, "%s: ERROR: random_r() returns error, %s.\n",
+			fprintf(fpError, "%s: ERROR: random_r() returns error, %s.\n",
 				cmdl->Argv0,
 				strerror(errno)
 			);
@@ -178,7 +203,7 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 	n = cmdl->Length;
 	wlen = fwrite(buf0, sizeof(buf0[0]), n, stdout);
 	if (wlen != n) {
-		fprintf(stderr, "%s: ERROR: Can not complete fwrite(), %s. wlen=%ld, n=%ld\n",
+		fprintf(fpError, "%s: ERROR: Can not complete fwrite(), %s. wlen=%ld, n=%ld\n",
 			cmdl->Argv0,
 			strerror(errno),
 			(long)(wlen), (long)(n)
@@ -199,15 +224,24 @@ out_free:
 
 int main(int argc, char **argv, __maybe_unused char **env)
 {	int	result = 0;
+	char	*a0;
 
+	fpError = stderr;
+
+	a0 = argv[0];
 	if (!CCommandLineParse(&CommandLine, argc, argv) ||
 	    CommandLine.Help) {
-		fprintf(stderr, HelpMessage, argv[0]);
+		fprintf(fpError, HelpMessage,
+			a0,
+			a0,
+			a0,
+			a0
+		);
 		return 1;
 	}
 	if (CommandLine.Debug) {
-		fprintf(stderr, "%s: DEBUG: Debug mode. Seed=%ld, Length=%ld\n",
-			argv[0],
+		fprintf(fpError, "%s: DEBUG: Debug mode. Seed=%ld, Length=%ld\n",
+			a0,
 			(long)(CommandLine.Seed),
 			(long)(CommandLine.Length)
 		);
