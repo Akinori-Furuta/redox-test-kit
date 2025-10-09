@@ -189,10 +189,10 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 out_rstate:
 #if !defined(__redox__)
 	/* Do nothing. */
+out_free:
 #else /* !defined(__redox__) */
 	setstate(rstate_prev);
 #endif /* !defined(__redox__) */
-out_free:
 	free(buf0);
 	return result;
 }
