@@ -58,7 +58,7 @@ all: mt19937ar.o
 mtTest: mtTest.o mt19937ar.o
 	$(CC) $(CFLAGS) -o $@ $^
 	./mtTest > $(MTTEST_TEMP)
-	diff $(MTTEST_TEMP) mt19937ar.out && echo "Match to pre calculated output."
+	( diff $(MTTEST_TEMP) mt19937ar.out && echo "PASS: Match to pre calculated output." ) || echo "FAIL: Incorrect output."
 
 mt19937ar.o: mt19937ar.c mt19937ar.h
 	$(CC) -c $(CFLAGS) -o $@ $<
