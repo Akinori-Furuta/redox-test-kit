@@ -5,13 +5,15 @@
 CC ?= gcc
 CFLAGS ?= -Wall -O2
 
+MT19937AR_FILES = $(wildcard  ../$(MT19937AR)/*.c ../$(MT19937AR)/*.h)
+
 all: prand
 
-prand: prand.c ../mt19937ar/mt19937ar.o
-	$(CC) $(CFLAGS) $(CFLAGS_EXTRA) -o $@ ../mt19937ar/mt19937ar.o $<
+prand: prand.c ../$(MT19937AR)/mt19937ar.o
+	$(CC) $(CFLAGS) $(CFLAGS_EXTRA) -o $@ ../$(MT19937AR)/mt19937ar.o $<
 
-../mt19937ar/mt19937ar.o: ../mt19937ar/mt19937ar.c ../mt19937ar/mt19937ar.h
-	make -C ../mt19937ar
+../$(MT19937AR)/mt19937ar.o: $(MT19937AR_FILES)
+	make -C ../$(MT19937AR)
 
 clean:
 	rm prand

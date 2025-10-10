@@ -5,7 +5,9 @@
 CC ?= gcc
 CFLAGS ?= -Wall -O2
 
-SUBDIRS = prand mt19937ar
+export MT19937AR = mt19937ar
+
+SUBDIRS = prand $(MT19937AR)
 
 .PHONY: all clean subdirs tmp mtTest $(SUBDIRS)
 
@@ -16,7 +18,7 @@ subdirs: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-mtTest: tmp
+mtTest: tmp $(MT19937AR)/*
 	make -C mt19937ar mtTest
 
 tmp:
