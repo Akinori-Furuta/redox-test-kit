@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "../mt19937ar/mt19937ar.h"
 
 #define	__force_cast
 
@@ -40,7 +41,7 @@ typedef struct {
 	bool		Debug;
 	bool		Help;
 	char		*Argv0;
-	long		Seed;
+	unsigned long	Seed;
 	ssize_t		Length;
 } CCommandLine;
 
@@ -54,7 +55,8 @@ CCommandLine	CommandLine = {
 bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 {	int	result = true;
 	int	opt;
-	long	lval;
+	long		lval;
+	unsigned long	ulval;
 	char	c;
 	char	*p;
 	char	*p2;
@@ -66,19 +68,14 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 			/* Set Random Seed */
 			p = optarg;
 			p2 = p;
-			lval = strtol(p, &p2, 0);
+			ulval = strtoul(p, &p2, 0);
 			if (p2 == p) {
 				fprintf(fpError, "%s: ERROR: Specify integer to -s (seed) option.\n",
 					cmdl->Argv0
 				);
 				result = false;
 			} else {
-				if (lval == 0) {
-					fprintf(fpError, "%s: NOTICE: Seed value 0 is alias to 1.\n",
-						cmdl->Argv0
-					);
-				}
-				cmdl->Seed = lval;
+				cmdl->Seed = ulval;
 			}
 			break;
 		case 'v':
@@ -136,22 +133,12 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 	return result;
 }
 
-#define	RANDOM_STATE_SIZE	(256)
-#define	RANDOM_BITS		(31)
-
 bool EmitPesudoRand(CCommandLine *cmdl)
 {	unsigned char	*buf0 = NULL;
 	unsigned char	*p;
 	ssize_t		n;
 	ssize_t		wlen;
 	bool		result = true;
-
-	char			rstate[RANDOM_STATE_SIZE];
-#if !defined(__redox__)
-	struct random_data	rdata;
-#else /* !defined(__redox__) */
-	char			*rstate_prev = NULL;
-#endif /* !defined(__redox__) */
 
 	n = cmdl->Length;
 	buf0 = malloc(n);
@@ -162,39 +149,14 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 		return false;
 	}
 
-	memset(rstate, 0, sizeof(rstate));
-#if !defined(__redox__)
-	memset(&rdata, 0, sizeof(rdata));
-	if (initstate_r((unsigned int)(cmdl->Seed),
-			rstate, sizeof(rstate), &rdata) != 0) {
-		fprintf(fpError, "%s: ERROR: initstate_r() returns error, %s.\n",
-			cmdl->Argv0,
-			strerror(errno)
-		);
-		result = false;
-		goto out_free;
-	}
-#else /* !defined(__redox__) */
-	rstate_prev = initstate((unsigned int)(cmdl->Seed), rstate, sizeof(rstate));
-#endif /* !defined(__redox__) */
+	init_genrand((uint32_t)(cmdl->Seed));
 
 	p = buf0;
 	while (n) {
-		int32_t		r32 = 0;
+		uint32_t	r32 = 0;
 
-#if !defined(__redox__)
-		if (random_r(&rdata, &r32) != 0) {
-			fprintf(fpError, "%s: ERROR: random_r() returns error, %s.\n",
-				cmdl->Argv0,
-				strerror(errno)
-			);
-			result = false;
-			goto out_rstate;
-		}
-#else /* !defined(__redox__) */
-		r32 = (int32_t)random();
-#endif /* !defined(__redox__) */
-		*p = (unsigned char)(r32 >> (RANDOM_BITS - 8));
+		r32 = genrand_uint32();
+		*p = (unsigned char)r32;
 		p++;
 		n--;
 	}
@@ -208,15 +170,9 @@ bool EmitPesudoRand(CCommandLine *cmdl)
 			(long)(wlen), (long)(n)
 		);
 		result = false;
-		goto out_rstate;
+		goto out;
 	}
-out_rstate:
-#if !defined(__redox__)
-	/* Do nothing. */
-out_free:
-#else /* !defined(__redox__) */
-	setstate(rstate_prev);
-#endif /* !defined(__redox__) */
+out:
 	free(buf0);
 	return result;
 }

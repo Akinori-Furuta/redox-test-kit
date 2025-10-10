@@ -5,16 +5,24 @@
 CC ?= gcc
 CFLAGS ?= -Wall -O2
 
-all: ./tmp prand/prand
+SUBDIRS = prand mt19937ar
 
-mtTest: ./tmp
+.PHONY: all clean subdirs tmp mtTest $(SUBDIRS)
+
+all: subdirs
+
+subdirs: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+mtTest: tmp
 	make -C mt19937ar mtTest
 
-./tmp:
-	mkdir -p ./tmp
+tmp:
+	mkdir -p tmp
 
-prand/prand:
-	make -C prand
+prand: mt19937ar
 
 clean:
 	rm -rf ./tmp
