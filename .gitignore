@@ -1,5 +1,5 @@
 *.o
 prand/prand
+getopt/getopt-alt-test
 mt19937ar/mtTest
 tmp/*
-
