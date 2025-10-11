@@ -11,7 +11,7 @@
 #define optind		optind_alt
 #define opterr		opterr_alt
 #define optopt		optopt_alt
-#define getop		getopt_alt
+#define getopt		getopt_alt
 #endif /* (defined(GETOPT_ALT_TAKEOVER)) */
 #endif /* (defined(GETOPT_ALT_C)) */
 
