@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdio.h>
 #include "../mt19937ar/mt19937ar.h"
+#define GETOPT_ALT_TAKEOVER
+#include "../getopt/getopt-alt.h"
 
 #define	__force_cast
 
