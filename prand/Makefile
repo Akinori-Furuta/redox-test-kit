@@ -2,8 +2,7 @@
 #
 # Copyright (C) 2025 afuruta@m7.dion.ne.jp
 
-CC ?= gcc
-CFLAGS ?= -Wall -O2
+include ../Makefile.inc
 
 MT19937AR_FILES = $(wildcard  ../$(MT19937AR)/*.c ../$(MT19937AR)/*.h)
 GETOPT_FILES = $(wildcard  ../$(GETOPT)/*.c ../$(GETOPT)/*.h)

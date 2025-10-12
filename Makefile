@@ -2,13 +2,7 @@
 #
 # Copyright (C) 2025 afuruta@m7.dion.ne.jp
 
-CC ?= gcc
-CFLAGS ?= -Wall -O2
-
-export MT19937AR = mt19937ar
-export GETOPT = getopt
-
-SUBDIRS = prand $(GETOPT) $(MT19937AR)
+include Makefile.inc
 
 .PHONY: all clean subdirs tmp mtTest $(SUBDIRS)
 
@@ -16,8 +10,11 @@ all: subdirs
 
 subdirs: $(SUBDIRS)
 
-$(SUBDIRS):
+$(filter-out $(PRAND),$(SUBDIRS)):
 	$(MAKE) -C $@
+
+$(PRAND): $(MT19937AR) $(GETOPT)
+	make -C $@
 
 mtTest: tmp $(MT19937AR)/*
 	make -C $(MT19937AR) mtTest
@@ -25,10 +22,8 @@ mtTest: tmp $(MT19937AR)/*
 tmp:
 	mkdir -p tmp
 
-prand: $(MT19937AR) $(GETOPT)
-
-clean:
+clean: clean-subdirs
 	rm -rf ./tmp
-	make -C prand clean
-	make -C $(MT19937AR) clean
-	make -C $(GETOPT) clean
+
+clean-subdirs:
+	for d in $(SUBDIRS) ; do make -C $$d clean; done

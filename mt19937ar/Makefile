@@ -36,7 +36,7 @@
 # $ make mtTest
 #
 
-CFLAGS?=-O3 -Wall -Wunused -Wuninitialized
+include ../Makefile.inc
 
 UseNative=$(shell uname -m | grep -q -e x86_64 -e 'i[3456]86' -e athlon ; echo $$? )
 ifeq ($(UseNative), 0)

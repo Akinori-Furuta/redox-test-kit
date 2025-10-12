@@ -36,8 +36,7 @@
 # $ make test
 #
 
-CC?=gcc
-CFLAGS?=-O3 -Wall -Wunused -Wuninitialized
+include ../Makefile.inc
 
 .PHONY: all test
 
