@@ -62,7 +62,7 @@ CCommandLine	CommandLine = {
 };
 
 bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
-{	int	result = true;
+{	bool	result = true;
 	int	opt;
 	long		lval;
 	unsigned long	ulval;
@@ -71,7 +71,7 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 	char	*p2;
 
 	cmdl->Argv0 = argv[0];
-	while ((opt = getopt(argc, argv, "s:vV:h")) != -1) {
+	while ((opt = getopt(argc, argv, "s:i:a:d:vV:h")) != -1) {
 		switch (opt) {
 		case 's':
 			/* Set Random Seed */
@@ -118,10 +118,12 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 				);
 				result = false;
 			} else {
-				fprintf(fpError, "%s: ERROR: Specify positive value to -a (maxumum_length) option.\n",
-					cmdl->Argv0
-				);
-				result = false;
+				if (lval <= 0) {
+					fprintf(fpError, "%s: ERROR: Specify positive value to -a (maxumum_length) option.\n",
+						cmdl->Argv0
+					);
+					result = false;
+				}
 				cmdl->MaximumLength = lval;
 			}
 			break;
@@ -151,6 +153,9 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 		case '?':
 		default:
 			/* Set help */
+			fprintf(fpError, "%s: INFO: Requested help. opt=%c\n",
+				cmdl->Argv0, opt
+			);
 			cmdl->Help = true;
 			break;
 		}
@@ -536,12 +541,20 @@ bool MashLfMain(CCommandLine *cmdl)
 
 int main(int argc, char ** argv, char **env)
 {	int	result = 0;
+	bool	parse;
 
 	fpError = stderr;
 
-	if ((!CCommandLineParse(&CommandLine, argc, argv)) ||
-		CommandLine.Help
-	) {
+	parse = CCommandLineParse(&CommandLine, argc, argv);
+	if (CommandLine.Debug) {
+		fprintf(fpError, "%s: DEBUG: Command line. seed=%lu, minimum=%ld, maximum=%ld\n",
+			argv[0],
+			(unsigned long)(CommandLine.Seed),
+			(long)(CommandLine.MinimumLength),
+			(long)(CommandLine.MaximumLength)
+		);
+	}
+	if ((!parse) || (CommandLine.Help)) {
 		const char	*argv0;
 
 		argv0 = argv[0];
