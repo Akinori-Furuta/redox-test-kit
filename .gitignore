@@ -1,5 +1,6 @@
 *.o
 prand/prand
+mashlf/mashlf
 getopt/getopt-alt-test
 mt19937ar/mtTest
 tmp/*
