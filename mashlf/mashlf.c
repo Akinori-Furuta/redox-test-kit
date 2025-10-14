@@ -434,8 +434,8 @@ void MashLfRandLineChars(MashLf *mlf)
 }
 
 bool MashLfWriteLf(MashLf *mlf)
-{	char	buf;
-	ssize_t	wlen;
+{	uint8_t		buf;
+	ssize_t		wlen;
 
 	buf = '\n';
 	wlen = (__force_cast ssize_t)fwrite(&buf, sizeof(buf), 1, stdout);
