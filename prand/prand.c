@@ -72,7 +72,7 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 			p2 = p;
 			ulval = strtoul(p, &p2, 0);
 			if (p2 == p) {
-				fprintf(fpError, "%s: ERROR: Specify integer to -s (seed) option.\n",
+				fprintf(fpError, "%s: ERROR: Specify unsigned integer to -s (seed) option.\n",
 					cmdl->Argv0
 				);
 				result = false;
