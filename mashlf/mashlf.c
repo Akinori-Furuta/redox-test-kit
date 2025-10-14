@@ -499,10 +499,9 @@ bool MashLfMain(CCommandLine *cmdl)
 		ch = 0;
 		rlen = (__force_cast ssize_t)fread(&ch, sizeof(ch), 1, stdin);
 		if (rlen == 0) {
-			fprintf(fpError, "stdin: ERROR: Can not read, %s.\n",
-				strerror(errno)
-			);
-			result = false;
+			/* Consider we see end of file
+			 * (no more reads from pipe).
+			 */
 			break;
 		}
 
