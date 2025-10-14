@@ -475,6 +475,7 @@ bool MashLfGrowLine(MashLf *mlf, ssize_t code_count)
 
 	cut_len = mlf->CutLength;
 	cut_len -= code_count;
+	mlf->CutLength = cut_len;
 
 	if (cut_len <= 0) {
 		MashLfRandLineChars(mlf);
