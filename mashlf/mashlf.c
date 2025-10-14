@@ -425,7 +425,7 @@ typedef struct {
 
 void MashLfInit(MashLf *mlf, ssize_t min, ssize_t max)
 {	mlf->CutMin = min;
-	mlf->CutDelta = (max - min) - 1;
+	mlf->CutDelta = max - min + 1;
 	mlf->CutLength = 0;
 }
 
