@@ -450,7 +450,7 @@ bool MashLfWriteThrough(MashLf *mlf, const uint8_t *buf, ssize_t buf_len)
 		return true;
 	}
 
-	wlen = (__force_cast ssize_t)fwrite(&buf,
+	wlen = (__force_cast ssize_t)fwrite(buf,
 		sizeof(*buf),
 		(__force_cast size_t)buf_len, stdout
 	);
