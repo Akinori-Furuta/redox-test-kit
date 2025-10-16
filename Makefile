@@ -10,10 +10,13 @@ all: subdirs
 
 subdirs: $(SUBDIRS)
 
-$(filter-out $(PRAND),$(SUBDIRS)):
+$(filter-out $(PRAND) $(MASHLF),$(SUBDIRS)):
 	$(MAKE) -C $@
 
 $(PRAND): $(MT19937AR) $(GETOPT)
+	make -C $@
+
+$(MASHLF): $(MT19937AR) $(GETOPT)
 	make -C $@
 
 mtTest: tmp $(MT19937AR)/*
