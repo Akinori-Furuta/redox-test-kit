@@ -183,6 +183,7 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 
 #define UTF8SEQ_INIT	(0x00)
 #define UTF8SEQ_ASC	(0x01)
+/*! @note UTF8SEQ_R2, _R3, _R4 should be the number of encoded bytes. */
 #define UTF8SEQ_R2	(0x02)
 #define UTF8SEQ_R3	(0x03)
 #define UTF8SEQ_R4	(0x04)
@@ -191,8 +192,7 @@ bool CCommandLineParse(CCommandLine *cmdl, int argc, char **argv)
 typedef struct {
 	uint8_t		SeqRange;
 	uint8_t		SeqField;
-	uint8_t		ReadChar;
-	uint8_t		PushedChar;
+	uint8_t		PendingChar;
 	ssize_t		CodeCount;
 	ssize_t		CodeRawCount;
 	uint8_t		CodeRaw[5];
@@ -201,8 +201,7 @@ typedef struct {
 void UTF8SequencerInit(UTF8Sequencer *us)
 {	us->SeqRange = UTF8SEQ_INIT;
 	us->SeqField = 0;
-	us->ReadChar = 0x00;
-	us->PushedChar = 0x00;
+	us->PendingChar = 0x00;
 	us->CodeCount = 0;
 	us->CodeRawCount = 0;
 	memset(&(us->CodeRaw[0]), 0, sizeof(us->CodeRaw));
@@ -239,8 +238,60 @@ uint8_t UTF8SeqDetChar(uint8_t c)
 	return UTF8SEQ_ASC;
 }
 
-size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
-{	uint8_t		pushed;
+#define	UTF8SEQ_CHAR_NOP	(0xffff)
+#define	UTF8SEQ_CHAR_KNOCK	(0xfffe)
+
+/* @note We can repeat calling UTF8SequencerStepTock() twice or more.
+ */
+void UTF8SequencerStepTock(UTF8Sequencer *us)
+{	uint8_t		r;
+	uint8_t		f;
+
+	r = us->SeqRange;
+	f = us->SeqField;
+	/* Adjust Sequence State */
+	switch (r) {
+	case UTF8SEQ_INIT:
+	case UTF8SEQ_ASC:
+		us->SeqField = 0;
+		us->PendingChar = 0x00;
+		us->CodeCount = 0;
+		us->CodeRawCount = 0;
+		break;
+	case UTF8SEQ_R2: /* A.Rx.R2 */
+	case UTF8SEQ_R3: /* A.Rx.R3 */
+	case UTF8SEQ_R4: /* A.Rx.R4 */
+		if ((f + 1) >= r) {
+			/* Got all encoded bytes. */
+			us->SeqRange = UTF8SEQ_INIT;
+			us->SeqField = 0;
+			us->PendingChar = 0x00;
+			us->CodeCount = 0;
+			us->CodeRawCount = 0;
+			break;
+		}
+		/* @note If come here, We are on one of
+		 * following state.
+		 *  1. Waiting succeeding encoded byte(s).
+		 *  2. PendingChar may have character to place
+		 *     CodeRaw[].
+		 */
+		break;
+	case UTF8SEQ_FIELD: /* A.F */
+		us->SeqRange = UTF8SEQ_INIT;
+		us->SeqField = 0;
+		us->PendingChar = 0x00;
+		us->CodeCount = 0;
+		us->CodeRawCount = 0;
+		break;
+	default: /* Will not come here. */
+		/* Do nothing */
+		break;
+	}
+}
+
+ssize_t UTF8SequencerStepTick(UTF8Sequencer *us, uint16_t cc)
+{	uint8_t		pend;
 	uint8_t		r;
 	uint8_t		f;
 	uint8_t		det;
@@ -248,53 +299,23 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 
 	r = us->SeqRange;
 	f = us->SeqField;
-	/* Adjust Sequence State */
-	switch (r) {
-	case UTF8SEQ_R2: /* A.Rx.R2 */
-		if (f >= 1) {
-			r = UTF8SEQ_INIT;
-			f = 0;
-			us->SeqField = f;
-			/* @note CodeRawCount will be fixed at R.ASC */
-		}
-		break;
-	case UTF8SEQ_R3: /* A.Rx.R3 */
-		if (f >= 2) {
-			r = UTF8SEQ_INIT;
-			f = 0;
-			us->SeqField = f;
-			/* @note CodeRawCount will be fixed at R.ASC */
-		}
-		break;
-	case UTF8SEQ_R4: /* A.Rx.R4 */
-		if (f >= 3) {
-			r = UTF8SEQ_INIT;
-			f = 0;
-			us->SeqField = f;
-			/* @note CodeRawCount will be fixed at R.ASC */
-		}
-		break;
-	case UTF8SEQ_FIELD: /* A.F */
-		if (f == 0) {
-			r = UTF8SEQ_INIT;
-		}
-		break;
-	default: /* Will not come here. */
-		/* Do nothing */
-		break;
-	}
-	/* Pop pushed char, if is is prsent. */
-	pushed = us->PushedChar;
-	if (pushed != 0x00) {
-		/* There is pushed character. */
-		/* @note: pushed char range is [0x80 .. 0xff]. */
+
+	/* If there is pending char, buffer it to CodeRaw[]. */
+	pend = us->PendingChar;
+	if (pend != 0x00) {
+		/* There is pending character. */
+		/* @note: pending char range is [0x80 .. 0xff]. */
 		us->CodeRawCount = 1;
-		us->CodeRaw[0] = pushed; /* P.To0 */
-		us->PushedChar = 0x00;
+		us->CodeRaw[0] = pend; /* P.To0 */
+		us->PendingChar = 0x00;
 	}
 
-	us->ReadChar = c;
-	det = UTF8SeqDetChar(c);
+	if (cc > ((uint8_t)~0x00)) {
+		/* Knocked, will flush bytes from CodeRaw[]. */
+		return us->CodeRawCount;
+	}
+
+	det = UTF8SeqDetChar((__force_cast uint8_t)cc);
 	switch (r) {
 	case UTF8SEQ_INIT:
 	case UTF8SEQ_ASC: /* R.ASC */
@@ -304,7 +325,7 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 			us->SeqField = 0;
 			us->CodeCount = 1;
 			us->CodeRawCount = 1;
-			us->CodeRaw[0] = c;
+			us->CodeRaw[0] = (__force_cast uint8_t)cc;
 			return 1;
 		case UTF8SEQ_R2:
 		case UTF8SEQ_R3:
@@ -313,14 +334,14 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 			us->SeqField = 0;
 			us->CodeCount = 0;
 			us->CodeRawCount = 1;
-			us->CodeRaw[0] = c;
+			us->CodeRaw[0] = (__force_cast uint8_t)cc;
 			return 0;
 		case UTF8SEQ_FIELD:
 			us->SeqRange = det;
 			us->SeqField = 0;
 			us->CodeCount = 1;
 			us->CodeRawCount = 1;
-			us->CodeRaw[0] = c;
+			us->CodeRaw[0] = (__force_cast uint8_t)cc;
 			/* Will be adjusted at A.F */
 			return 1;
 		default: /* Will not come here. */
@@ -328,7 +349,7 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 			us->SeqField = 0;
 			us->CodeCount = 0;
 			us->CodeRawCount = 1;
-			us->CodeRaw[0] = c;
+			us->CodeRaw[0] = (__force_cast uint8_t)cc;
 			return 1;
 		}
 	case UTF8SEQ_R2:
@@ -337,43 +358,26 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 		switch (det) {
 		case UTF8SEQ_FIELD:
 			f++;
-			/* Will be adjusted at A.Rx.R2, A.Rx.R3, A.Rx.R4 */
+			/* Will be adjusted at Tock()
+			 * {A.Rx.R2, A.Rx.R3, A.Rx.R4}
+			 */
 			us->SeqField = f;
 			rcount = us->CodeRawCount;
-			us->CodeRaw[rcount] = c;
+			us->CodeRaw[rcount] = (__force_cast uint8_t)cc;
 			rcount++;
 			us->CodeRawCount = rcount;
-			switch (r) {
-			case UTF8SEQ_R2:
-				if (rcount >= 2) {
-					us->CodeCount = 1;
-					return rcount;
-				}
-				break;
-			case UTF8SEQ_R3:
-				if (rcount >= 3) {
-					us->CodeCount = 1;
-					return rcount;
-				}
-				break;
-			case UTF8SEQ_R4:
-				if (rcount >= 4) {
-					us->CodeCount = 1;
-					return rcount;
-				}
-				break;
-			default:
-				/* Do nothing. */
-				break;
+			if ((f + 1) >= r) {
+				/* Got all encoded bytes. */
+				us->CodeCount = 1;
+				return rcount;
 			}
-			us->CodeCount = 0;
 			return 0;
 		case UTF8SEQ_ASC:
 			us->SeqRange = det;
 			us->SeqField = 0;
 			us->CodeCount = 2; /* Broken Rx and ASCII */
 			rcount = us->CodeRawCount;
-			us->CodeRaw[rcount] = c;
+			us->CodeRaw[rcount] = (__force_cast uint8_t)cc;
 			rcount++;
 			/* Will be adjusted at R.ASC */
 			us->CodeRawCount = rcount;
@@ -384,7 +388,7 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 			us->SeqRange = det;
 			us->SeqField = 0;
 			/* Will be poped at P.To0 */
-			us->PushedChar = c;
+			us->PendingChar = (__force_cast uint8_t)cc;
 			us->CodeCount = 1; /* Broken Rx */
 			rcount = us->CodeRawCount;
 			return rcount;
@@ -396,7 +400,7 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 		us->SeqField = 0;
 		us->CodeCount = 2; /* Broken Rx and Broken something. */
 		rcount = us->CodeRawCount;
-		us->CodeRaw[rcount] = c;
+		us->CodeRaw[rcount] = (__force_cast uint8_t)cc;
 		rcount++;
 		/* Will be adjusted at R.ASC */
 		us->CodeRawCount = rcount;
@@ -409,7 +413,7 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 	us->SeqField = 0;
 	us->CodeCount = 1; /* Broken something. */
 	rcount = us->CodeRawCount;
-	us->CodeRaw[rcount] = c;
+	us->CodeRaw[rcount] = (__force_cast uint8_t)cc;
 	rcount++;
 	/* Will be adjusted at R.ASC */
 	us->CodeRawCount = rcount;
@@ -419,13 +423,14 @@ size_t UTF8SequencerStep(UTF8Sequencer *us, uint8_t c)
 typedef struct {
 	ssize_t		CutMin;
 	double		CutDelta;
+	ssize_t		CodeCount;
 	ssize_t		CutLength;
 } MashLf;
-
 
 void MashLfInit(MashLf *mlf, ssize_t min, ssize_t max)
 {	mlf->CutMin = min;
 	mlf->CutDelta = max - min + 1;
+	mlf->CodeCount = 0;
 	mlf->CutLength = 0;
 }
 
@@ -445,6 +450,7 @@ bool MashLfWriteLf(MashLf *mlf)
 		);
 		return false;
 	}
+	mlf->CodeCount = 0;
 	return true;
 }
 
@@ -466,23 +472,64 @@ bool MashLfWriteThrough(MashLf *mlf, const uint8_t *buf, ssize_t buf_len)
 		);
 		return false;
 	}
+
 	return true;
 }
 
 bool MashLfGrowLine(MashLf *mlf, ssize_t code_count)
 {	bool		result = true;
-	ssize_t		cut_len;
 
-	cut_len = mlf->CutLength;
-	cut_len -= code_count;
-	mlf->CutLength = cut_len;
-
-	if (cut_len <= 0) {
+	code_count += mlf->CodeCount;
+	if (code_count >= mlf->CutLength) {
 		MashLfRandLineChars(mlf);
 		result = MashLfWriteLf(mlf);
+	} else {
+		mlf->CodeCount = code_count;
 	}
 
 	return result;
+}
+
+bool MashLfPropagate(MashLf *mlf, UTF8Sequencer *us, uint16_t cc)
+{	ssize_t		craw_len;
+	ssize_t		code_count;
+	const uint8_t	*craw;
+
+	if (cc != UTF8SEQ_CHAR_NOP) {
+		/* Update state, will drain bytes in CodeRaw[]
+		 * when encoded byte(s) are(is) completed.
+		 */
+		craw_len = UTF8SequencerStepTick(us, cc);
+		code_count = us->CodeCount;
+	} else {
+		/* Anyway, drain bytes in CodeRaw[] */
+		craw_len = us->CodeRawCount;
+		code_count = 1;
+	}
+
+	if ((craw_len <= 0) || (code_count <= 0)) {
+		return true;
+	}
+
+	craw = &(us->CodeRaw[0]);
+
+	if (*(craw + craw_len - 1) == '\n') {
+		/* LF terminated,
+		 * block propagating LF to output.
+		 */
+		code_count--;
+		craw_len--;
+	}
+
+	if (!MashLfWriteThrough(mlf, craw, craw_len)) {
+		return false;
+	}
+
+	if (!MashLfGrowLine(mlf, code_count)) {
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -491,8 +538,6 @@ bool MashLfMain(CCommandLine *cmdl)
 	UTF8Sequencer	u8seq;
 	MashLf		mlf;
 	ssize_t		rlen;
-	ssize_t		craw_len;
-
 	uint8_t		ch;
 
 	UTF8SequencerInit(&u8seq);
@@ -511,32 +556,30 @@ bool MashLfMain(CCommandLine *cmdl)
 			break;
 		}
 
-		craw_len = UTF8SequencerStep(&u8seq, ch);
-		if (craw_len > 0) {
-			const uint8_t	*craw;
-			ssize_t		code_count;
+		if (!MashLfPropagate(&mlf, &u8seq, ch)) {
+			return false;
+		}
 
-			craw = &(u8seq.CodeRaw[0]);
-			code_count = u8seq.CodeCount;
-			if (*(craw + craw_len - 1) == '\n') {
-				/* LF terminated,
-				 * block propagating LF to output.
-				 */
-				code_count--;
-				craw_len--;
-			}
+		UTF8SequencerStepTock(&u8seq);
+	}
 
-			if (!MashLfWriteThrough(&mlf, craw, craw_len)) {
-				result = false;
-				break;
-			}
+	/* Drain bytes in u8seq.CodeRaw[]. */
+	if (!MashLfPropagate(&mlf, &u8seq, UTF8SEQ_CHAR_NOP)) {
+		return false;
+	}
 
-			if (!MashLfGrowLine(&mlf, code_count)) {
-				result = false;
-				break;
-			}
+	/* Drain byte in PendingChar */
+	if (!MashLfPropagate(&mlf, &u8seq, UTF8SEQ_CHAR_KNOCK)) {
+		return false;
+	}
+
+	if (mlf.CodeCount > 0) {
+		/* Last line isn't LF terminated. */
+		if (!MashLfWriteLf(&mlf)) {
+			return false;
 		}
 	}
+
 	return result;
 }
 
