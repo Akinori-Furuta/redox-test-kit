@@ -82,6 +82,7 @@ function RandBase64Str() {
 	result=$?
 	if (( ${result} != 0 ))
 	then
+		echo "$0.RandBase64Str: ERROR: May broken pipe. length=$1, seed=$2"
 		return ${result}
 	fi
 	return 0
@@ -95,6 +96,7 @@ function RandUint64() {
 	result=$?
 	if (( ${result} != 0 ))
 	then
+		echo "$0.RandUint64: ERROR: May broken pipe. seed=$1"
 		return ${result}
 	fi
 	return 0
@@ -108,12 +110,13 @@ function RandUint64Hex() {
 	result=$?
 	if (( ${result} != 0 ))
 	then
+		echo "$0.RandUint64Hex: ERROR: May broken pipe. seed=$1"
 		return ${result}
 	fi
 	return 0
 }
 
-
+# arg directory_path
 function RemoveTrailingSlash() {
 	local	result
 	local	l
@@ -131,6 +134,7 @@ function RemoveTrailingSlash() {
 	result=$?
 	if (( ${result} != 0 ))
 	then
+		echo "$0.RemoveTrailingSlash: ERROR: May echo failed. directory_path=$1"
 		return ${result}
 	fi
 	return 0
@@ -155,6 +159,7 @@ function FileNameToDirectory() {
 	result=$?
 	if (( ${result} != 0 ))
 	then
+		echo "$0.RemoveTrailingSlash: ERROR: May echo failed. directory_path=$1"
 		return ${result}
 	fi
 	return 0
@@ -178,10 +183,36 @@ do
 	fi
 
 	file_dir="${BaseDirectory}$( FileNameToDirectory ${file_name} ${Depth} ${DirectoryChars} )"
+	result=$?
+	if (( ${result} != 0 ))
+	then
+		exit ${result}
+	fi
+
 	file_path="${file_dir}/${file_name}"
 	mkdir -p "${file_dir}"
+	result=$?
+	if (( ${result} != 0 ))
+	then
+		echo "$0.main: ERROR: Can not create or validate directory. file_dir=$1"
+		exit ${result}
+	fi
+
 	r64=$( RandUint64 ${seed_num} )
+	result=$?
+	if (( ${result} != 0 ))
+	then
+		exit ${result}
+	fi
+
 	file_size=$( calc "floor( ${FileSizeMin} + ( ${FileSizeMax} - ${FileSizeMin} + 1 ) * ( ${r64} / 18446744073709551616 ) )" )
+	result=$?
+	if (( ${result} != 0 ))
+	then
+		echo "$0.main: ERROR: calc failed."
+		exit ${result}
+	fi
+
 	file_size=$( echo ${file_size} )
 	if [[ -z "${TextFile}" ]]
 	then
