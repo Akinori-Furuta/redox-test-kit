@@ -3,4 +3,5 @@ prand/prand
 mashlf/mashlf
 getopt/getopt-alt-test
 mt19937ar/mtTest
+mk-files-tree/test*
 tmp/*
