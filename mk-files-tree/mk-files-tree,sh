@@ -181,7 +181,7 @@ do
 	file_path="${file_dir}/${file_name}"
 	mkdir -p "${file_dir}"
 	r64=$( RandUint64 ${seed_num} )
-	file_size=$( calc -d "floor( ${FileSizeMin} + ( ${FileSizeMax} - ${FileSizeMin} + 1 ) * ( ${r64} / 18446744073709551616 ) )" )
+	file_size=$( calc "floor( ${FileSizeMin} + ( ${FileSizeMax} - ${FileSizeMin} + 1 ) * ( ${r64} / 18446744073709551616 ) )" )
 	file_size=$( echo ${file_size} )
 	if [[ -z "${TextFile}" ]]
 	then
