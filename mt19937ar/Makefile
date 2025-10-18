@@ -38,7 +38,7 @@
 
 include ../Makefile.inc
 
-which_awk:=$(shell which awk)
+which_awk:=$(shell which awk 2>/dev/null)
 
 UseNative=$(shell uname -m | grep -q -e x86_64 -e 'i[3456]86' -e athlon ; echo $$? )
 ifeq ($(UseNative), 0)
