@@ -1,6 +1,8 @@
 #!/bin/bash
 # SPDX-License-Identifier: BSD-2-Clause
 
+set -o pipefail
+
 result=0
 
 time_marker=$( date +%y%m%d%H%M%S )
