@@ -14,8 +14,9 @@ do
 
 	now_date=$( date +%y%m%d%H%M%S )
 	log_file="${prefix}$( printf "%04d" ${i} )_${now_date}.log"
-	if "$@"  2>&1 | tee "${log_file}"
+	"$@"  2>&1 | tee "${log_file}"
 	result=$?
+	if (( ${result} == 0 ))
 	then
 		echo "$0: Success. i=${i}"
 		break
