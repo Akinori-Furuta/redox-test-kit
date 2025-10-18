@@ -38,6 +38,8 @@
 
 include ../Makefile.inc
 
+which_awk:=$(shell which awk)
+
 UseNative=$(shell uname -m | grep -q -e x86_64 -e 'i[3456]86' -e athlon ; echo $$? )
 ifeq ($(UseNative), 0)
 	CFLAGS+= -march=native -mtune=native
@@ -45,7 +47,9 @@ endif
 
 MTTEST_TEMP=../tmp/mtTestOutUnderTest.txt
 
-Test2SComp=$(shell echo -n '        ' | tr ' ' '\377' | od -t d4 | grep -e '[-]1' | awk '{print $$2}' )
+ifneq ($(which_awk),)
+	Test2SComp=$(shell echo -n '        ' | tr ' ' '\377' | od -t d4 | grep -e '[-]1' | awk '{print $$2}' )
+endif
 
 ifeq ($(Test2SComp), -1)
 	CFLAGS_CONFIG_2SCOMP?=-DCONFIG_2SCOMP
