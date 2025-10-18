@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
 #define _GNU_SOURCE
 #define GETOPT_ALT_C
 #include <stddef.h>

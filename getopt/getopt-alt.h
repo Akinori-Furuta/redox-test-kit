@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
 #if (!defined(GETOPT_ALT_H))
 #define GETOPT_ALT_H
 #include <stddef.h>

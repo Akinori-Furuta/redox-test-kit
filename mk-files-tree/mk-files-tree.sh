@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: BSD-2-Clause
 
 Seed=0
 Depth=2
