@@ -194,7 +194,7 @@ do
 	result=$?
 	if (( ${result} != 0 ))
 	then
-		echo "$0.main: ERROR: Can not create or validate directory. file_dir=$1"
+		echo "$0.main: ERROR: Can not create or validate directory. file_dir=\"$1\""
 		exit ${result}
 	fi
 
@@ -221,6 +221,7 @@ do
 		result=$?
 		if (( ${result} != 0 ))
 		then
+			echo "$0.main: ERROR: prand exited with error. result=${result}"
 			exit ${result}
 		fi
 	else
@@ -229,6 +230,7 @@ do
 		result=$?
 		if (( ${result} != 0 ))
 		then
+			echo "$0.main: ERROR: Can not create text file. file_path=\"${file_path}\", result=${result}"
 			exit ${result}
 		fi
 	fi
