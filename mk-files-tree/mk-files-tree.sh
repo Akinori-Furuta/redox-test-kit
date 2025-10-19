@@ -141,14 +141,21 @@ function RemoveTrailingSlash() {
 	local	l
 	local	m
 
-	l=${#1}
-	m=$(( ${l} - 1 ))
-
-	if [[ "${1:${m}:1}" == "/" ]]
+	if [[ "${1}" == "/" ]]
 	then
-		echo "${1:0:${m}}"
-	else
+		# The root path.
+		# Keep the root path.
 		echo "${1}"
+	else
+		l=${#1}
+		m=$(( ${l} - 1 ))
+
+		if [[ "${1:${m}:1}" == "/" ]]
+		then
+			echo "${1:0:${m}}"
+		else
+			echo "${1}"
+		fi
 	fi
 	result=$?
 	if (( ${result} != 0 ))
@@ -184,10 +191,7 @@ function FileNameToDirectory() {
 	return 0
 }
 
-if [[ "${BaseDirectory}" != "/" ]]
-then
-	BaseDirectory="$( RemoveTrailingSlash "${BaseDirectory}" )"
-fi
+BaseDirectory="$( RemoveTrailingSlash "${BaseDirectory}" )"
 
 file_num=0
 
