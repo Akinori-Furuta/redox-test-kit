@@ -9,6 +9,14 @@ time_marker=$( date +%y%m%d%H%M%S )
 cmd_body=${1##*/}
 cmd_body=${cmd_body%.*}
 prefix="repeater_${cmd_body}_${time_marker}_"
+
+cmd_which="$( which "$1" )"
+if [[ -z "${cmd_which}" ]]
+then
+	echo "$0: HELP: repeater.sh command_to_exexute [arguments...]"
+	exit 1
+fi
+
 i=0
 while (( ${i} <= 9999 ))
 do
@@ -16,6 +24,9 @@ do
 
 	now_date=$( date +%y%m%d%H%M%S )
 	log_file="${prefix}$( printf "%04d" ${i} )_${now_date}.log"
+	# Dummy command
+	true
+	# Do command
 	"$@"  2>&1 | tee "${log_file}"
 	result=$?
 	if (( ${result} == 0 ))
