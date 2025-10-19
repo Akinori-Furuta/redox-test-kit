@@ -166,7 +166,14 @@ function RemoveTrailingSlash() {
 	return 0
 }
 
+# Test purpose function
+# Compose directory path from head of file name
 # arg: file_name depth chars
+# example:
+# Call this function as follows,
+#  FileNameToDirectory ab01ABname-part 3 2
+# outputs,
+# /ab/01/AB
 function FileNameToDirectory() {
 	local	result
 	local	i
