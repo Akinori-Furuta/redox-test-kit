@@ -1,5 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: BSD-2-Clause
+# Repeat command until success
 
 set -o pipefail
 
@@ -13,6 +14,7 @@ prefix="repeater_${cmd_body}_${time_marker}_"
 cmd_which="$( which "$1" )"
 if [[ -z "${cmd_which}" ]]
 then
+	echo "$0: HELP: Repeat command until success."
 	echo "$0: HELP: repeater.sh command_to_exexute [arguments...]"
 	exit 1
 fi

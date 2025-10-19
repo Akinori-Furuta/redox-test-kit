@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
+/* getopt() alternate implimentation */
 #if (!defined(GETOPT_ALT_H))
 #define GETOPT_ALT_H
 #include <stddef.h>
@@ -8,6 +9,7 @@
 
 #if (!defined(GETOPT_ALT_C))
 #if (defined(GETOPT_ALT_TAKEOVER))
+/* Taking over getopt functions and variables. */
 #define optarg		optarg_alt
 #define optind		optind_alt
 #define opterr		opterr_alt
@@ -21,10 +23,11 @@
 /* Unknown option */
 #define GETOPT_ALT_UNKNOWN	('?') /* compatible with getopt() */
 
+/*! Alternate getopt() internal state */
 typedef struct {
-	int		OptIndex;
-	ssize_t		OptLetterIndex;
-	bool		OptionEnds;
+	int		OptIndex;	/*!< index number of argv[] */
+	ssize_t		OptLetterIndex; /*!< string index number of option argument "-abc" */
+	bool		OptionEnds;	/*!< No more option. */
 } GetOptAlt;
 
 extern GetOptAlt GetOptAltState;

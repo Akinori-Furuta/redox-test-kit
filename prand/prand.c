@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
+/* Write pseudo random byte(s) to stdout. */
 #define _GNU_SOURCE
 #include <stddef.h>
 #include <stdbool.h>
@@ -34,10 +35,11 @@
 FILE	*fpError = NULL;
 
 const char HelpMessage[] =
-	"%s: INFO: prand [-v] [-s seed_value] bytes_to_output\n"
-	"%s: INFO: -v: Debug\n"
-	"%s: INFO: -s seed_value: Integer pseudo random seed value\n"
-	"%s: INFO: -V debug_switch: e: Output error messages to stdout.\n"
+	"%s: HELP: Write pseudo random byte(s) to stdout.\n"
+	"%s: HELP: prand [-v] [-s seed_value] bytes_to_output\n"
+	"%s: HELP: -v: Debug.\n"
+	"%s: HELP: -s seed_value: Unsigned integer pseudo random seed value.\n"
+	"%s: HELP: -V debug_switch: e: Output error messages to stdout.\n"
 	;
 
 typedef struct {
@@ -190,6 +192,7 @@ int main(int argc, char **argv, __maybe_unused char **env)
 	if (!CCommandLineParse(&CommandLine, argc, argv) ||
 	    CommandLine.Help) {
 		fprintf(fpError, HelpMessage,
+			a0,
 			a0,
 			a0,
 			a0,

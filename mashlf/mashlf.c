@@ -1,4 +1,12 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
+/* Add LF (Line Feed) randomly to text stream.
+ * Process stdin text stream as follows.
+ * * Read text from stdin
+ * * Remove LF code
+ * * Write text to stdout with..,
+ * ** Write LF randomly to stdout
+ * Only supports UTF8 encording.
+ */
 #define _GNU_SOURCE
 #include <stddef.h>
 #include <stdbool.h>
@@ -34,13 +42,14 @@
 FILE	*fpError = NULL;
 
 const char HelpMessage[] =
-/* 1 */	"%s: INFO: mashlf [-v] [-s seed_value] [-i minimum] [-a maximum] [-d distribution]\n"
-/* 2 */	"%s: INFO: -v: Debug\n"
-/* 3 */	"%s: INFO: -V: Debug switch, e=message to stdout.\n"
-/* 4 */	"%s: INFO: -s seed_value: Integer pseudo random seed value\n"
-/* 5 */	"%s: INFO: -i minimum_length: Minimum line length\n"
-/* 6 */	"%s: INFO: -a maximum_length: Maximum line length\n"
-/* 7 */	"%s: INFO: -d distribution: Distribution function (not implemented)\n"
+/* 1 */	"%s: HELP: Add randomly LF to text stream stdin to stdout.\n"
+/* 2 */	"%s: HELP: mashlf [-v] [-s seed_value] [-i minimum] [-a maximum] [-d distribution]\n"
+/* 3 */	"%s: HELP: -v: Debug\n"
+/* 4 */	"%s: HELP: -V: Debug switch, e=message to stdout.\n"
+/* 5 */	"%s: HELP: -s seed_value: Integer pseudo random seed value\n"
+/* 6 */	"%s: HELP: -i minimum_length: Minimum line length\n"
+/* 7 */	"%s: HELP: -a maximum_length: Maximum line length\n"
+/* 8 */	"%s: HELP: -d distribution: Distribution function (not implemented)\n"
 	;
 
 typedef struct {
@@ -605,7 +614,7 @@ int main(int argc, char ** argv, char **env)
 		argv0 = argv[0];
 		fprintf(fpError, HelpMessage,
 			argv0, argv0, argv0, argv0, argv0,
-			argv0, argv0
+			argv0, argv0, argv0
 		);
 		return 1;
 	}

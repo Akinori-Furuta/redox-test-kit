@@ -1,5 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: BSD-2-Clause
+# Make files randomly in random directory tree.
 
 set -o pipefail
 
@@ -52,6 +53,10 @@ do
 		TextFile=yes
 		;;
 	(*)
+		echo "$0: HELP: Make file(s) randomly in random directory tree."
+		echo "$0: HELP: mk-files-tree.sh [-s seed] [-d depth] [-c characters] [-l length] \\"
+		echo "$0: HELP: [-n number_of_files] [-i file_size_min] [-a file_size_max] \\"
+		echo "$0: HELP: [-I text_line_min] [-A text_line_max] [-t] [-B directory]"
 		echo "$0: HELP: -s seed: random seed"
 		echo "$0: HELP: -d depth: directory depth"
 		echo "$0: HELP: -c characters: characters of directory name"
@@ -62,7 +67,9 @@ do
 		echo "$0: HELP: -I text_line_min: Min text line characters"
 		echo "$0: HELP: -A text_line_max: Max text line characters"
 		echo "$0: HELP: -t: Create text file (other wise binary file)"
-		echo "$0: HELP: -B: Base directory"
+		echo "$0: HELP: -B directory: Base directory"
+		echo "$0: HELP: NOTE: When create text file (using-t option), file_size_* means"
+		echo "$0: HELP: the number of characters except LF (Line Feed)."
 		exit 1
 		;;
 	esac

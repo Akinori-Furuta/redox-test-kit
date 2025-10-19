@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
+/* getopt() alternate implimentation */
 #define _GNU_SOURCE
 #define GETOPT_ALT_C
 #include <stddef.h>
@@ -250,6 +251,13 @@ int GetOptAltGetOpt(GetOptAlt *g, int argc, char * const *argv, const char *opts
 	return GETOPT_ALT_NOMORE;
 }
 
+/*! alternate getopt() function
+ *  @note Following features are not implimented.
+ *  * First character in optstring is '+' or '-'.
+ *  ** Character '+': Stop processing at non-option argument.
+ *  ** Character '-': Treat non-option argument(s) as option
+ *                    code 1 parameter.
+ */
 int getopt_alt(int argc, char * const *argv, const char *optstring)
 {	GetOptAlt	*g;
 	int		opt;
