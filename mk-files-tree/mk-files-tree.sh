@@ -82,7 +82,11 @@ echo -n "-I ${TextLineCharsMin} -A ${TextLineCharsMax} "
 echo -n "-B \"${BaseDirectory}\" "
 [[ -n "${TextFile}" ]] && echo "-t" || "echo"
 
+# Write base64-no-slash encoded pseudo random sequence to stdout
 # arg: length seed
+# note: Write modified base64 text as follows,
+# * replace '/' into '_'
+# * delete LF
 function RandBase64Str() {
 	local	result
 	local	prand_bin_len
@@ -98,7 +102,9 @@ function RandBase64Str() {
 	return 0
 }
 
+# Write 64bit(in decimal) pseudo random number from seed
 # arg: seed
+# note: This function simply transforms seed number to a uint64_t number.
 function RandUint64() {
 	local	result
 
@@ -112,7 +118,9 @@ function RandUint64() {
 	return 0
 }
 
+# Write 64bit(in hex) pseudo random number from seed
 # arg: seed
+# note: This function simply transforms seed number to a uint64_t number.
 function RandUint64Hex() {
 	local	result
 
@@ -126,6 +134,7 @@ function RandUint64Hex() {
 	return 0
 }
 
+# Remove trailing slash ('/'), path handling function.
 # arg directory_path
 function RemoveTrailingSlash() {
 	local	result
