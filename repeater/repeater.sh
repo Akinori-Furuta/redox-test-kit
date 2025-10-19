@@ -11,8 +11,7 @@ cmd_body=${1##*/}
 cmd_body=${cmd_body%.*}
 prefix="repeater_${cmd_body}_${time_marker}_"
 
-cmd_which="$( which "$1" )"
-if [[ -z "${cmd_which}" ]]
+if ! command -v "$1" > /dev/null 2>&1
 then
 	echo "$0: HELP: Repeat command until success."
 	echo "$0: HELP: repeater.sh command_to_exexute [arguments...]"
