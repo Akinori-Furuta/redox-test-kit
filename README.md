@@ -6,7 +6,7 @@ This repository contains Redox OS test kit written
 in C and bash codes.
 Currently I suspend developing more tests. Due to
 there are many critical errors (they may be memory
-reference counting or locking, and waiting process
+reference counting or locking, or waiting process
 issue in the Redox kernel).
 
 ## Required packages
