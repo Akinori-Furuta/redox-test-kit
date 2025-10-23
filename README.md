@@ -7,7 +7,7 @@ in C and bash codes.
 Currently I suspend developing more tests. Due to
 there are many critical errors (they may be memory
 reference counting or locking, or waiting process
-issue in the Redox kernel).
+issue in Redox OS kernel).
 
 ## Required packages
 
@@ -30,19 +30,19 @@ sudo pkg install openssh vim
 > print following message. Type __\[Ctrl\]-\[C\]__ to
 > terminate command.
 >
-> ```none
+> ```text
 > done
 > shutodown(N, M) 
 > ```
 
 > [!TIP]
 > You may see back trace similar to following output due
->  to page fault (it's Weird, is the rust language free
+>  to page fault (it's Weird, is Rust language free
 > from "segmentation fault"?).
-> It's better running command at cosmic-terminal
-> rather than runing command at QEMU text terminal.
+> It's better running pkg command at cosmic-terminal
+> rather than running pkg command at QEMU text terminal.
 >
-> ```none
+> ```text
 > Page fault: 000000000000000C US
 > RFLAG: 0000000000010297
 > CS:    000000000000002b
@@ -78,11 +78,13 @@ sudo pkg install openssh vim
 
 ## Build
 
-Use the QEMU terminal (monitor/console multiplexer). Login as user,
+Use QEMU terminal (monitor/console multiplexer). Login as user,
 
-```none
+```text
 redox login: user
 ```
+> [!TIP]
+> If you can't see "`redox login: `" prompt, type enetr to see prompt.
 
 ### Clone sources from github
 
@@ -126,16 +128,16 @@ popd
 ```
 On Redox OS, ./mk-files-tree.sh will fail. You may see following fails,
 
-* Stop script before finish creating 4096 files.
+* Stop script before finish creating 4096 files
   * It seems waiting a event. You can "`PS`" to find process id (PID), "`kill 1` _PID_" from GUI cosmic-terminal.
-    Note: Redox `kill` command requires signal number
+    Note: Redox OS `kill` command requires signal number
     at first parameter, `1` means SIGHUP in UNIXes signaling system.
-    * Some time, the QEMU emulator process consumes
+    * Some time, QEMU emulator process consumes
       near 100% CPU usage. Especially, run at cosmic-terminal or run other processes simultaneously.
-* Kernel panic.
+* Kernel panic
   * You may see kernel panic around "src/memory/mod.rs:954:9", you will got following output,
 
-    ```none
+    ```text
     KERNEL PANIC: panicked at src/memory/mod.rs:954:9:
       allocator-owned frames need a PageInfo, but none for [frame at 0x7ffffffffffff000]
     ```
@@ -143,5 +145,5 @@ On Redox OS, ./mk-files-tree.sh will fail. You may see following fails,
     * It seems reference counting or locking
   failure at file descriptor context or error context.
     * Some memory free failure at system call gate.
-    * Some time, the QEMU emulator process consumes
+    * Some time, QEMU emulator process consumes
       near 100% CPU usage. Especially, run at cosmic-terminal or run other processes simultaneously.
