@@ -9,6 +9,12 @@ there are many critical errors (they may be memory
 reference counting or locking, or waiting process
 issue in Redox OS kernel).
 
+## Run Redox OS on QEMU
+
+It's most stable run Redox OS on QEMU emulator.
+See [QEMU Instructions - Running Redox in a Virtual
+Machine](https://doc.redox-os.org/book/running-vm.html#qemu-instructions).
+
 ## Required packages
 
 Add packages `git`, `gcc13`, `gnu-grep`, and `gnu-make`. Type following command at Redox Desktop cosmic-termial window.
