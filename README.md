@@ -76,6 +76,16 @@ sudo pkg install openssh vim
 >   0000000000000010: GUARD PAGE
 > ```
 
+> [!TIP]
+> If you want to buind on Ubuntu (debian derived
+> distributions), required packages are `build-essential`,
+> `grep`, and `calc`. So, install packages as follows.
+>
+> ```bash
+> sudo apt install build-essential grep calc
+> ```
+>
+
 ## Build
 
 Use QEMU terminal (monitor/console multiplexer). Login as user,
