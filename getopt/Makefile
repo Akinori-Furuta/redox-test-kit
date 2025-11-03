@@ -10,7 +10,7 @@
 # Clean:
 # $ make clean
 #
-# Test getopt-alt lib:
+# Make executable to test getopt-alt lib:
 # $ make test
 #
 
