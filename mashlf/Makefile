@@ -3,20 +3,23 @@
 
 include ../Makefile.inc
 
-MT19937AR_FILES = $(wildcard  ../$(MT19937AR)/*.c ../$(MT19937AR)/*.h)
-GETOPT_FILES = $(wildcard  ../$(GETOPT)/*.c ../$(GETOPT)/*.h)
+MT19937AR_FILES = $(foreach f, $(MT19937AR_DEPS), ../$(MT19937AR)/$(f))
+MT19937AR_OBJECT_FILES = $(foreach f, $(MT19937AR_OBJS), ../$(MT19937AR)/$(f))
+
+GETOPT_FILES = $(foreach f, $(GETOPT_DEPS), ../$(GETOPT)/$(f))
+GETOPT_OBJECT_FILES = $(foreach f, $(GETOPT_OBJS), ../$(GETOPT)/$(f))
 
 all: mashlf
 
-mashlf: mashlf.c ../$(MT19937AR)/mt19937ar.o ../$(GETOPT)/getopt-alt.o
+mashlf: mashlf.c $(MT19937AR_OBJECT_FILES) $(GETOPT_OBJECT_FILES)
 	$(CC) $(CFLAGS) $(CFLAGS_EXTRA) -o $@ \
-		../$(MT19937AR)/mt19937ar.o ../$(GETOPT)/getopt-alt.o \
+		$(MT19937AR_OBJECT_FILES) $(GETOPT_OBJECT_FILES) \
 		$<
 
-../$(MT19937AR)/mt19937ar.o: $(MT19937AR_FILES)
+$(MT19937AR_OBJECT_FILES): $(MT19937AR_FILES)
 	make -C ../$(MT19937AR)
 
-../$(GETOPT)/getopt-alt.o: $(GETOPT_FILES)
+$(GETOPT_OBJECT_FILES): $(GETOPT_FILES)
 	make -C ../$(GETOPT)
 
 clean:

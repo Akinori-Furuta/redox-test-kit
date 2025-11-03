@@ -18,18 +18,18 @@ include ../Makefile.inc
 
 .PHONY: all test
 
-all: getopt-alt.o
+all: $(GETOPT_OBJS)
 
 test: getopt-alt-test
 
-getopt-alt-test: getopt-alt-test.o getopt-alt.o
+getopt-alt-test: getopt-alt-test.o $(GETOPT_OBJS)
 	$(CC) $(CFLAGS) $(CFLAGS_EXTRA) -o $@ $^
 
-getopt-alt.o: getopt-alt.c getopt-alt.h
+$(GETOPT_OBJS): $(GETOPT_DEPS)
 	$(CC) -c $(CFLAGS) $(CFLAGS_EXTRA) -o $@ $<
 
-getopt-alt-test.o: getopt-alt-test.c getopt-alt.c getopt-alt.h
+getopt-alt-test.o: getopt-alt-test.c $(GETOPT_DEPS)
 	$(CC) -c $(CFLAGS) $(CFLAGS_EXTRA) -o $@ $<
 
 clean:
-	rm -rf getopt-alt.o getopt-alt-test.o getopt-alt-test
+	rm -rf $(GETOPT_OBJS) getopt-alt-test.o getopt-alt-test
