@@ -25,8 +25,6 @@ mtTest: tmp $(MT19937AR)/*
 tmp:
 	mkdir -p tmp
 
-clean: clean-subdirs
+clean:
 	rm -rf ./tmp
-
-clean-subdirs:
 	for d in $(SUBDIRS) ; do make -C $$d clean; done

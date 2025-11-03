@@ -23,4 +23,4 @@ $(GETOPT_OBJECT_FILES): $(GETOPT_FILES)
 	make -C ../$(GETOPT)
 
 clean:
-	rm mashlf
+	rm -rf mashlf

@@ -24,4 +24,4 @@ $(GETOPT_OBJECT_FILES): $(GETOPT_FILES)
 	make -C ../$(GETOPT)
 
 clean:
-	rm prand
+	rm -rf prand
